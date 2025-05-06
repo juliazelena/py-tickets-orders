@@ -110,12 +110,41 @@ class TicketSerializer(serializers.ModelSerializer):
         fields = ["id", "row", "seat", "movie_session"]
 
 
+class TicketCreateSerializer(TicketSerializer):
+    movie_session = serializers.PrimaryKeyRelatedField(
+        queryset=MovieSession.objects.all()
+    )
+
+    class Meta:
+        model = Ticket
+        fields = ["row", "seat", "movie_session"]
+
+
 class OrderSerializer(serializers.ModelSerializer):
-    tickets = TicketSerializer(many=True, read_only=False, allow_empty=False)
 
     class Meta:
         model = Order
-        fields = ["id", "tickets", "created_at"]
+        fields = ["id", "created_at"]
+
+
+class OrderListSerializer(OrderSerializer):
+    tickets = TicketSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Order
+        fields = ["tickets", ]
+
+
+class OrderCreateSerializer(serializers.ModelSerializer):
+    tickets = TicketCreateSerializer(
+        many=True,
+        read_only=False,
+        allow_empty=False
+    )
+
+    class Meta:
+        model = Order
+        fields = ["tickets", ]
 
     def create(self, validated_data):
         with transaction.atomic():
